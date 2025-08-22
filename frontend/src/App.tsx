@@ -198,6 +198,7 @@ const MainContent = ({
   setEditingDevice,
   setEditingCat,
   currentUser,
+  onUserUpdate,
   viewMode,
   setViewMode,
   filteredData,
@@ -268,7 +269,7 @@ const MainContent = ({
     }
     if (currentMenu === "schedule") return <Schedule />;
     if (currentMenu === "statistics") return <Statistics cats={cats} />;
-    if (currentMenu === "my-page") return <MyPage user={currentUser!} />;
+    if (currentMenu === "my-page") return <MyPage user={currentUser!} onUserUpdate={onUserUpdate} />;
     if (currentMenu === "admin") {
       if (currentUser?.role !== "admin") {
         return <div className="flex-1 flex items-center justify-center"><div className="text-center"><div className="text-muted-foreground mb-4">관리자 권한이 필요합니다.</div></div></div>;
@@ -346,8 +347,8 @@ const MainContent = ({
 }
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [currentUser, setCurrentUser] = useState<UserData | null>(mockUsers[1]);
+const [isAuthenticated, setIsAuthenticated] = useState(false);
+const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [authPage, setAuthPage] = useState<AuthPage>("login");
   const [currentMenu, setCurrentMenu] = useState<MenuType>("dashboard");
   const [currentManagement, setCurrentManagement] = useState<ManagementType>("cats");
@@ -497,6 +498,10 @@ const handleLoginAttempt = async (email: string, password: string): Promise<bool
     setCurrentUser(null);
     setIsAuthenticated(false);
     setCurrentMenu("dashboard");
+  };
+
+  const handleUserUpdate = (updatedUser: UserData) => {
+    setCurrentUser(updatedUser);
   };
 
   // [수정됨] 게시판 글 생성 함수 (API 연동 예시)
@@ -887,6 +892,7 @@ const handleEditClick = (item: any) => {
               setEditingDevice={setEditingDevice}
               setEditingCat = {setEditingCat}
               currentUser={currentUser}
+              onUserUpdate={handleUserUpdate}
               viewMode={viewMode}
               setViewMode={setViewMode}
               filteredData={filteredData}

@@ -1,27 +1,43 @@
 import React, { useState } from 'react'
 
 const ERROR_IMG_SRC =
-  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODgiIGhlaWdodD0iODgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIzLjciPjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiByeD0iNiIvPjxwYXRoIGQ9Im0xNiA1OCAxNi0xOCAzMiAzMiIvPjxjaXJjbGUgY3g9IjUzIiBjeT0iMzUiIHI9IjciLz48L3N2Zz4KCg=='
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODgiIGhlaWdodD0iODg...iAzMiIvPjxjaXJjbGUgY3g9IjUzIiBjeT0iMzUiIHI9IjciLz48L3N2Zz4KCg=='
 
-export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElement>) {
+type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
+  /** 로딩 실패 시 표시할 대체 이미지 경로(옵션) */
+  fallbackSrc?: string
+}
+
+const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+const toPublicUrl = (p?: string) => {
+  if (!p) return "";
+  // 이미 절대 URL이면 그대로
+  if (/^https?:\/\//i.test(p)) return p;
+  // '/app/public/... → /public/...'
+  const path = p.startsWith("/app/") ? p.replace("/app", "") : p;
+  // API_BASE가 비어있으면 그대로 '/public/..'로 반환 → Vite가 가로채므로 반드시 API_BASE 세팅 필요
+  console.log("CatImagePath",`${API_BASE}${path}`)
+  return `${API_BASE}${path}`;
+};
+
+export function ImageWithFallback(props: Props) {
   const [didError, setDidError] = useState(false)
+  const { src, alt, style, className, fallbackSrc, ...rest } = props
+  console.log("test:",src,alt,style,className,fallbackSrc)
+  const handleError = () => setDidError(true)
 
-  const handleError = () => {
-    setDidError(true)
-  }
+  // src가 없거나 로딩 실패 -> fallbackSrc(있으면) 또는 기본 에러 SVG
+  const actualSrc = (!didError && src) ? src : (toPublicUrl(src) ?? ERROR_IMG_SRC)
 
-  const { src, alt, style, className, ...rest } = props
-
-  return didError ? (
-    <div
-      className={`inline-block bg-gray-100 text-center align-middle ${className ?? ''}`}
+  return (
+    <img
+      src={actualSrc}
+      alt={alt}
+      className={className}
       style={style}
-    >
-      <div className="flex items-center justify-center w-full h-full">
-        <img src={ERROR_IMG_SRC} alt="Error loading image" {...rest} data-original-url={src} />
-      </div>
-    </div>
-  ) : (
-    <img src={src} alt={alt} className={className} style={style} {...rest} onError={handleError} />
+      onError={handleError}
+      {...rest}
+      data-original-url={src}
+    />
   )
 }
